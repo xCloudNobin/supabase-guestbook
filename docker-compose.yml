@@ -1,0 +1,65 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8101:3000"
+    environment:
+      SUPABASE_URL: http://api:8000
+      SUPABASE_ANON_KEY: internal-compose-network
+      SUPABASE_INTERNAL_NO_AUTH: "true"
+    depends_on:
+      api:
+        condition: service_healthy
+
+  db:
+    image: supabase/postgres:17.6.1.136
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - supabase_db:/var/lib/postgresql/data
+      - ./supabase/schema.sql:/docker-entrypoint-initdb.d/99-guestbook.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  rest:
+    image: postgrest/postgrest:v14.17
+    restart: unless-stopped
+    environment:
+      PGRST_DB_URI: postgres://postgres@db:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_EXTRA_SEARCH_PATH: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_DB_MAX_ROWS: 1000
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "postgrest", "--ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    image: nginx:1.29-alpine
+    restart: unless-stopped
+    volumes:
+      - ./supabase/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      rest:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8000/rest/v1/"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  supabase_db:
