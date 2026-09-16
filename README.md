@@ -38,4 +38,4 @@ Or start the complete app and Supabase data layer:
 docker compose up --build
 ```
 
-The Compose deployment publishes the app on port `8104`. Database data is persisted in the `supabase_db` named volume.
+The Compose deployment publishes the app on port `8104`. Database data is persisted in the `supabase_db_v2` named volume. Set `POSTGRES_PASSWORD` in the deployment environment; never commit it to Git.
