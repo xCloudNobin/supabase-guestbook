@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "8102:3000"
+      - "8104:3000"
     environment:
       SUPABASE_URL: http://api:8000
       SUPABASE_ANON_KEY: internal-compose-network
