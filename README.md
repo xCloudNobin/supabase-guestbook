@@ -38,4 +38,4 @@ Or start the complete app and Supabase data layer:
 docker compose up --build
 ```
 
-The Compose deployment publishes the app on port `8101`. Database data is persisted in the `supabase_db` named volume.
+The Compose deployment publishes the app on port `8102`. Database data is persisted in the `supabase_db` named volume.
