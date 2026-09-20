@@ -13,6 +13,12 @@ services:
     depends_on:
       api:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/api/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
 
   db:
     image: supabase/postgres:17.6.1.136

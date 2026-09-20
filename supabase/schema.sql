@@ -16,7 +16,7 @@ end
 $$;
 
 grant usage on schema public to anon;
-grant select, insert on public.messages to anon;
+grant select, insert, update, delete on public.messages to anon;
 grant usage, select on sequence public.messages_id_seq to anon;
 
 drop policy if exists "Public can read messages" on public.messages;
@@ -26,3 +26,11 @@ create policy "Public can read messages" on public.messages
 drop policy if exists "Public can add messages" on public.messages;
 create policy "Public can add messages" on public.messages
   for insert to anon with check (true);
+
+drop policy if exists "Public can update messages" on public.messages;
+create policy "Public can update messages" on public.messages
+  for update to anon using (true) with check (true);
+
+drop policy if exists "Public can delete messages" on public.messages;
+create policy "Public can delete messages" on public.messages
+  for delete to anon using (true);
