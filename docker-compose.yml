@@ -39,6 +39,9 @@ services:
       PGRST_DB_EXTRA_SEARCH_PATH: public
       PGRST_DB_ANON_ROLE: anon
       PGRST_DB_MAX_ROWS: 1000
+      # `postgrest --ready` (the healthcheck below) queries the admin server; without a port it
+      # reports "Admin server is not running" and the container never turns healthy.
+      PGRST_ADMIN_SERVER_PORT: 3001
     depends_on:
       db:
         condition: service_healthy
