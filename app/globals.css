@@ -28,8 +28,15 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .status { min-height: 1.2rem; margin-bottom: 0; color: #9fb0c7; font-size: .9rem; }
 .messages article { padding: 1rem 0; border-top: 1px solid #263449; }
 .messages article:first-of-type { border-top: 0; }
-.messages article div { display: flex; justify-content: space-between; gap: 1rem; }
+.messages article div { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
 .messages article p { margin-bottom: 0; color: #c4d0df; line-height: 1.55; }
 time { color: #75869e; font-size: .8rem; }
+.message-actions { display: flex; gap: .4rem; }
+.message-actions button { padding: .34rem .6rem; font-size: .75rem; border: 1px solid #33445e; border-radius: 8px; background: #13213a; color: #c8d3e2; font-weight: 700; }
+.message-actions button.danger { border-color: #5c2b2b; color: #ff9a9a; }
+.message-actions button:disabled { opacity: .45; cursor: not-allowed; }
+button.ghost { background: #13213a; color: #c8d3e2; }
+.edit-form { display: grid; justify-content: stretch; padding: 1rem 0; border-top: 1px solid #263449; }
+.edit-actions { display: flex; gap: .6rem; }
 
 @media (max-width: 760px) { main { padding-top: 3rem; } .grid { grid-template-columns: 1fr; } }

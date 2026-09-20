@@ -1,4 +1,13 @@
 import { NextResponse } from "next/server";
+import {
+  createMessage,
+  deleteMessage,
+  isPositiveId,
+  listMessages,
+  parseMessageInput,
+  parseUpdateInput,
+  updateMessage,
+} from "../../../lib/messages";
 import { getSupabaseClient } from "../../../lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -7,35 +16,61 @@ export async function GET() {
   const supabase = getSupabaseClient();
   if (!supabase) return NextResponse.json({ configured: false, messages: [] });
 
-  const { data, error } = await supabase
-    .from("messages")
-    .select("id,name,message,created_at")
-    .order("created_at", { ascending: false })
-    .limit(20);
-
-  if (error) {
-    return NextResponse.json({ configured: true, messages: [], error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ configured: true, messages: data });
+  const { messages, error } = await listMessages(20);
+  if (error) return NextResponse.json({ configured: true, messages: [], error }, { status: 500 });
+  return NextResponse.json({ configured: true, messages });
 }
 
 export async function POST(request: Request) {
   const supabase = getSupabaseClient();
-  if (!supabase) {
-    return NextResponse.json({ error: "Supabase is not configured." }, { status: 503 });
-  }
+  if (!supabase) return NextResponse.json({ error: "Supabase is not configured." }, { status: 503 });
 
   const body = (await request.json()) as { name?: unknown; message?: unknown };
-  const name = typeof body.name === "string" ? body.name.trim() : "";
-  const message = typeof body.message === "string" ? body.message.trim() : "";
+  const parsed = parseMessageInput(body);
+  if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
 
-  if (!name || !message || name.length > 60 || message.length > 280) {
-    return NextResponse.json({ error: "Enter a name and a message up to 280 characters." }, { status: 400 });
+  const result = await createMessage(parsed.name, parsed.message);
+  if ("error" in result) return NextResponse.json({ error: result.error }, { status: 500 });
+
+  return NextResponse.json({ message: result.value }, { status: 201 });
+}
+
+export async function PATCH(request: Request) {
+  const supabase = getSupabaseClient();
+  if (!supabase) return NextResponse.json({ error: "Supabase is not configured." }, { status: 503 });
+
+  const body = (await request.json()) as { id?: unknown; name?: unknown; message?: unknown };
+  if (!isPositiveId(body.id)) {
+    return NextResponse.json({ error: "A valid message id is required." }, { status: 400 });
   }
 
-  const { error } = await supabase.from("messages").insert({ name, message });
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const parsed = parseUpdateInput(body);
+  if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
 
-  return NextResponse.json({ ok: true }, { status: 201 });
+  const result = await updateMessage(body.id, parsed);
+  if ("error" in result) {
+    const status = result.notFound ? 404 : 500;
+    return NextResponse.json({ error: result.error }, { status });
+  }
+
+  return NextResponse.json({ message: result.value });
+}
+
+export async function DELETE(request: Request) {
+  const supabase = getSupabaseClient();
+  if (!supabase) return NextResponse.json({ error: "Supabase is not configured." }, { status: 503 });
+
+  const { searchParams } = new URL(request.url);
+  const id = Number(searchParams.get("id"));
+  if (!isPositiveId(id)) {
+    return NextResponse.json({ error: "A valid message id is required." }, { status: 400 });
+  }
+
+  const result = await deleteMessage(id);
+  if ("error" in result) {
+    const status = result.notFound ? 404 : 500;
+    return NextResponse.json({ error: result.error }, { status });
+  }
+
+  return NextResponse.json({ deleted: result.value });
 }

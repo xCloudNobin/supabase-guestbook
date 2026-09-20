@@ -1,0 +1,12 @@
+# Compose overlay used ONLY by scripts/verify.sh to qualify the real Supabase
+# data layer on a machine where the app image cannot be built.
+#
+# It adds a loopback-only publish for the internal nginx API so the host can run
+# the standalone Next.js production server (SUPABASE_URL=http://127.0.0.1:...) 
+# against the real PostgREST -> Postgres stack. The app service is intentionally
+# not started here; production deployments keep the api unpublished (see
+# docker-compose.yml).
+services:
+  api:
+    ports:
+      - "127.0.0.1:${VERIFY_API_PORT:-8105}:8000"
